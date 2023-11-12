@@ -7,19 +7,21 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.reduce
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
 
     val countdownFlow = flow<Int> {
-        val startingValue = 10
+        val startingValue = 5
         var currentValue = startingValue
         emit(startingValue)
 
         while(currentValue > 0 ){
-            delay(1000L)
+            delay(100L)
             currentValue--
             emit(currentValue)
         }
@@ -29,7 +31,9 @@ class MainViewModel : ViewModel() {
 //        collectLatestFlow()
 //        collectFlowWithFilter()
 //        collectFlowWithMap()
-        collectFlowWithOnEach()
+//        collectFlowWithOnEach()
+//        countFlow()
+        reduceFlow()
     }
     private fun collectFlow() {
         /**
@@ -110,11 +114,12 @@ class MainViewModel : ViewModel() {
     }
 
     private fun countFlow() {
-        val count = viewModelScope.launch {
-            /**
-             * Collect with OnEach
-             */
-            countdownFlow
+        /**
+         * Count operator
+         */
+        var count = 0
+        viewModelScope.launch {
+            count = countdownFlow
                 .filter {
                     it % 2 == 0
                 }
@@ -127,9 +132,36 @@ class MainViewModel : ViewModel() {
                 .count {
                     it % 2 == 0
                 }
+            println("The Count is $count")
         }
+    }
 
-        println("The Count is $count")
+    private fun reduceFlow() {
+        /**
+         * Reduce operator
+         */
+        viewModelScope.launch {
+            val reduceResult = countdownFlow
+                .reduce { accumulator, value ->
+                    accumulator + value
+                }
+            println("The accumulated value is $reduceResult")
+
+        }
+    }
+
+    private fun foldFlow() {
+        /**
+         * Fold operator
+         */
+        viewModelScope.launch {
+            val foldResult = countdownFlow
+                .fold(initial = 100) { accumulator, value ->
+                    accumulator + value
+                }
+            println("The accumulated value is $foldResult")
+
+        }
     }
 
 }
