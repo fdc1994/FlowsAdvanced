@@ -6,6 +6,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.flow.map
@@ -26,6 +29,21 @@ class MainViewModel : ViewModel() {
             emit(currentValue)
         }
     }
+
+    private val simpleFirstIntFlow = flow<Int> {
+        emit(1)
+        delay(500)
+        emit(2)
+    }
+
+    private val exampleFlow = flow {
+        delay(250L)
+        emit("Appetizer")
+        delay(1000L)
+        emit("Main Dish")
+        delay(100L)
+        emit("Dessert")
+    }
     init {
 //        collectFlow()
 //        collectLatestFlow()
@@ -33,7 +51,12 @@ class MainViewModel : ViewModel() {
 //        collectFlowWithMap()
 //        collectFlowWithOnEach()
 //        countFlow()
-        reduceFlow()
+//        reduceFlow()
+//        foldFlow()
+//        flatMapConcatFlow()
+//        flatMapMergeFlow()
+//        flatMapLatest()
+        collectFlowExample()
     }
     private fun collectFlow() {
         /**
@@ -53,8 +76,8 @@ class MainViewModel : ViewModel() {
         /**
          * Collect Latest will only collect current emissions.
          *
-         * In this case, since we are emmitting a new value every second, but delaying this collection by 1.5
-         * seconds, only the last value will be printed since no new valus will be emitted after it
+         * In this case, since we are emitting a new value every second, but delaying this collection by 1.5
+         * seconds, only the last value will be printed since no new value will be emitted after it
          * and we can collect it after 1.5 seconds
          */
         viewModelScope.launch {
@@ -117,9 +140,8 @@ class MainViewModel : ViewModel() {
         /**
          * Count operator
          */
-        var count = 0
         viewModelScope.launch {
-            count = countdownFlow
+            val count = countdownFlow
                 .filter {
                     it % 2 == 0
                 }
@@ -163,5 +185,73 @@ class MainViewModel : ViewModel() {
 
         }
     }
+
+    private fun flatMapConcatFlow () {
+        /**
+         * FlatMap Concat
+         */
+        viewModelScope.launch {
+            simpleFirstIntFlow.flatMapConcat {value ->
+                flow {
+                    emit(value+1)
+                    delay(100L)
+                    emit(value +2)
+                }
+            }.collect {
+                println("The Value is $it")
+            }
+        }
+    }
+
+    private fun flatMapMergeFlow () {
+        /**
+         * FlatMap Merge
+         */
+        viewModelScope.launch {
+            simpleFirstIntFlow.flatMapMerge {value ->
+                flow {
+                    emit(value+1)
+                    delay(1500)
+                    emit(value +2)
+                }
+            }.collect {
+                println("The Value is $it")
+            }
+        }
+    }
+
+
+    private fun flatMapLatest () {
+        /**
+         * FlatMap Latest
+         *
+         * Will only emmit the latest value
+         */
+        viewModelScope.launch {
+            simpleFirstIntFlow.flatMapLatest {value ->
+                flow {
+                    emit(value+1)
+                    delay(1500)
+                    emit(value +2)
+                }
+            }.collect {
+                println("The Value is $it")
+            }
+        }
+    }
+
+    private fun collectFlowExample () {
+        viewModelScope.launch {
+            exampleFlow.onEach {
+                println("FLOW: $it is delivered")
+            }
+                .collect{
+                println("FLOW: Now eating $it")
+                delay(1500L)
+                println("FLOW: Finished eating $it")
+            }
+        }
+    }
+
 
 }
