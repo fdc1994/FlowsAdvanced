@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
@@ -21,8 +24,11 @@ class MainViewModel : ViewModel() {
         }
     }
     init {
-        collectFlow()
-        collectLatestFlow()
+//        collectFlow()
+//        collectLatestFlow()
+//        collectFlowWithFilter()
+//        collectFlowWithMap()
+        collectFlowWithOnEach()
     }
     private fun collectFlow() {
         /**
@@ -52,6 +58,53 @@ class MainViewModel : ViewModel() {
                 println("Collect latest : The current time is $time")
 
             }
+        }
+    }
+
+    private fun collectFlowWithFilter() {
+        viewModelScope.launch {
+            /**
+             * Collect with Filter operator
+             */
+            countdownFlow
+                .filter {time ->
+                    time % 2 == 0
+                }
+                .collect {time ->
+                println("Collect With Filter : The current time is $time")
+
+            }
+        }
+    }
+
+    private fun collectFlowWithMap() {
+        viewModelScope.launch {
+            /**
+             * Collect with Map operator
+             */
+            countdownFlow
+                .map {time ->
+                    time * time
+                }
+                .collect {time ->
+                    println("Collect With Map : The current time is $time")
+
+                }
+        }
+    }
+
+    private fun collectFlowWithOnEach() {
+        viewModelScope.launch {
+            /**
+             * Collect with OnEach
+             */
+            countdownFlow
+                .onEach {time ->
+                    println("On Each print : $time")
+                }
+                .collect {time ->
+                    println("Collect With OnEach : The current time is $time")
+                }
         }
     }
 
