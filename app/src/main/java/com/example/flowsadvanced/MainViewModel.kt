@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -106,6 +107,29 @@ class MainViewModel : ViewModel() {
                     println("Collect With OnEach : The current time is $time")
                 }
         }
+    }
+
+    private fun countFlow() {
+        val count = viewModelScope.launch {
+            /**
+             * Collect with OnEach
+             */
+            countdownFlow
+                .filter {
+                    it % 2 == 0
+                }
+                .map {
+                    it * it
+                }
+                .onEach {
+                    println(it.toString())
+                }
+                .count {
+                    it % 2 == 0
+                }
+        }
+
+        println("The Count is $count")
     }
 
 }
